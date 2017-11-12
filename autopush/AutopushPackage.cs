@@ -1,68 +1,61 @@
-﻿//------------------------------------------------------------------------------
-// <copyright file="AutopushPackage.cs" company="Hewlett-Packard">
-//     Copyright (c) Hewlett-Packard.  All rights reserved.
-// </copyright>
-//------------------------------------------------------------------------------
-
-using System;
-using System.ComponentModel.Design;
+﻿using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.ComponentModel.Design;
+using Microsoft.Win32;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.Win32;
+using autopush;
 
-namespace autopush
+namespace chun.autopush
 {
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
-    /// </summary>
-    /// <remarks>
-    /// <para>
+    ///
     /// The minimum requirement for a class to be considered a valid package for Visual Studio
     /// is to implement the IVsPackage interface and register itself with the shell.
     /// This package uses the helper classes defined inside the Managed Package Framework (MPF)
-    /// to do it: it derives from the Package class that provides the implementation of the
-    /// IVsPackage interface and uses the registration attributes defined in the framework to
-    /// register itself and its components with the shell. These attributes tell the pkgdef creation
-    /// utility what data to put into .pkgdef file.
-    /// </para>
-    /// <para>
-    /// To get loaded into VS, the package must be referred by &lt;Asset Type="Microsoft.VisualStudio.VsPackage" ...&gt; in .vsixmanifest file.
-    /// </para>
-    /// </remarks>
+    /// to do it: it derives from the Package class that provides the implementation of the 
+    /// IVsPackage interface and uses the registration attributes defined in the framework to 
+    /// register itself and its components with the shell.
+    /// </summary>
+    // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is
+    // a package.
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
+    // This attribute is used to register the information needed to show this package
+    // in the Help/About dialog of Visual Studio.
+    [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
     [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
-    [Guid(AutopushPackage.PackageGuidString)]
     [ProvideOptionPage(typeof(OptionPageGrid), "autopush", "normal", 0, 0, true)]
-    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-    public sealed class AutopushPackage : Package, IVsSolutionEvents
+    [Guid(GuidList.guidautopushPkgString)]
+    public sealed class autopushPackage : Package, IVsSolutionEvents
     {
         /// <summary>
-        /// AutopushPackage GUID string.
+        /// Default constructor of the package.
+        /// Inside this method you can place any initialization code that does not require 
+        /// any Visual Studio service because at this point the package object is created but 
+        /// not sited yet inside Visual Studio environment. The place to do all the other 
+        /// initialization is the Initialize method.
         /// </summary>
+        /// 
         public const string PackageGuidString = "5b4ebbbd-6591-417a-8cd4-209210c21b9f";
         private uint m_solutionCookie = 0;
         private SaveListener m_saveListener;
         private AutopushService service;
         public EnvDTE.DTE m_dte { get; set; }
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AutopushPackage"/> class.
-        /// </summary>
-        public AutopushPackage()
+
+        public autopushPackage()
         {
-            // Inside this method you can place any initialization code that does not require
-            // any Visual Studio service because at this point the package object is created but
-            // not sited yet inside Visual Studio environment. The place to do all the other
-            // initialization is the Initialize method.
             Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
         }
 
+
+
+        /////////////////////////////////////////////////////////////////////////////
+        // Overridden Package Implementation
         #region Package Members
 
         /// <summary>
@@ -71,15 +64,12 @@ namespace autopush
         /// </summary>
         protected override void Initialize()
         {
-            Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
+            Debug.WriteLine (string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
             base.Initialize();
-            
             IVsSolution solution = (IVsSolution)GetService(typeof(SVsSolution));
             ErrorHandler.ThrowOnFailure(solution.AdviseSolutionEvents(this, out m_solutionCookie));
         }
-
         #endregion
-
         #region IVsSolutionEvents Members
 
         public int OnAfterCloseSolution(object pUnkReserved)
@@ -114,15 +104,15 @@ namespace autopush
             if (m_dte.Solution != null)
             {
                 solution_path = System.IO.Path.GetDirectoryName(m_dte.Solution.FullName);
-                this.service = new AutopushService((OptionPageGrid)GetDialogPage(typeof(OptionPageGrid)), 
+                this.service = new AutopushService((OptionPageGrid)GetDialogPage(typeof(OptionPageGrid)),
                                                     (IVsUIShell)GetService(typeof(SVsUIShell)), solution_path);
                 m_saveListener = new SaveListener();
                 m_saveListener.register(m_dte, service);
             }
-            
+
         }
 
-   
+
 
 
         public int OnBeforeCloseProject(IVsHierarchy pHierarchy, int fRemoved)
