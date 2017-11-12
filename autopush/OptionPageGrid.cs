@@ -35,14 +35,19 @@ namespace autopush
         [DisplayName("ssh.passphrase")]
         [Description("ssh.passphrase")]
         public string ssh_passphrase { get; set; }
+        [Category("autopush")]
+        [DisplayName("libgit2-path")]
+        [Description("libgit2-path")]
+        public string libgit2_path { get; set; }
         public OptionPageGrid()
         {
             this.author = Environment.GetEnvironmentVariable("USERNAME");
-            this.email = this.author + "@gmail.com";
+            this.email = this.author + "@imcap.ap.ssmb.com";
             this.ssh_path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".ssh");
             this.public_key = "id_rsa.pub";
             this.private_key = "id_rsa";
             this.ssh_passphrase = string.Empty;
+            this.libgit2_path = System.IO.Path.GetTempPath() + "//libgit2";
         }
 
     }

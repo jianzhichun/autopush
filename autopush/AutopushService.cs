@@ -19,7 +19,7 @@ namespace autopush
         public AutopushService(OptionPageGrid page, IVsUIShell ui_shell, string solution_path)
         {
             string newPath = Environment.GetEnvironmentVariable("PATH") +
-                            ";" + Environment.CurrentDirectory + "\\lib\\win32\\x86";
+                            ";" + page.libgit2_path;
             Environment.SetEnvironmentVariable("PATH", newPath);
             this.page = page;
             this.ui_shell = ui_shell;
